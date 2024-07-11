@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"os"
 
@@ -13,13 +12,25 @@ import (
 
 // App struct
 type App struct {
-	ctx    context.Context
-	client *client.Client
+	ctx       context.Context
+	client    *client.Client
+	logOutput *os.File
 }
 
 // NewApp creates a new App application struct
 func NewApp() *App {
-	return &App{}
+	// Redirect before launch client
+	r, w, err := os.Pipe()
+	if err != nil {
+		panic(err)
+	}
+
+	// Redirect stdout to pipe
+	os.Stdout = w
+
+	app := new(App)
+	app.logOutput = r
+	return app
 }
 
 // startup is called when the app starts. The context is saved
@@ -59,15 +70,7 @@ func (a *App) Logout() {
 
 // Redirect stdout to ws
 func (a *App) MirrorLog(ws *websocket.Conn) {
-	r, w, err := os.Pipe()
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	// Redirect stdout to pipe
-	os.Stdout = w
-
 	for {
-		io.Copy(ws, r)
+		io.Copy(ws, a.logOutput)
 	}
 }

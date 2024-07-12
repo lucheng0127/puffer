@@ -103,12 +103,7 @@
 import { reactive, Ref, ref } from "vue";
 import { Ship, Connection, CircleCheckFilled } from "@element-plus/icons-vue";
 import { FormInstance, FormRules } from "element-plus";
-import {
-  Launch,
-  Logout,
-  CheckAuthed,
-  MirrorLog,
-} from "../../../wailsjs/go/main/App";
+import { Launch, Logout, CheckAuthed } from "../../../wailsjs/go/main/App";
 import { ElMessage } from "element-plus";
 
 const systemName = ref("Virtuallan客户端");
@@ -123,11 +118,11 @@ const loginFlag = ref(false);
 const loginMsg = ref("-");
 const loginFormRef = ref();
 const loginForm = reactive({
-  target: "192.168.137.142:6123",
-  username: "guest",
-  password: "timeToRest",
-  key: "B5FFCEE73EF298A4",
-  logLevel: "debug",
+  target: "",
+  username: "",
+  password: "",
+  key: "",
+  logLevel: "",
 });
 const loginRules = reactive<FormRules>({
   target: [{ required: true, message: "请输入服务器地址", trigger: "blur" }],
@@ -177,13 +172,13 @@ const handleSumit = async (formEl: FormInstance | undefined) => {
 
 const handleLogout = () => {
   Logout();
+  cancelWS();
   loginFlag.value = false;
-  socket.close();
   ElMessage.success("退出登录成功！");
 };
 
 // websocket 连接
-let socket: any;
+let socket: WebSocket | undefined;
 const initSocket = (url: any) => {
   if (!socket) {
     socket = new WebSocket(url);
@@ -198,6 +193,13 @@ const onerrorWS = () => {
 };
 const onmessageWS = (e: any) => {
   noticeMsg.value.splice(1, 0, e.data);
+};
+const cancelWS = () => {
+  socket?.close();
+  socket = undefined;
+  noticeMsg.value = [
+    "欢迎使用Virtuallan客户端，让您的系统接入更安全，体验更好！",
+  ];
 };
 </script>
 
